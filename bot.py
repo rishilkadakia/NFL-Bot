@@ -2,7 +2,6 @@ import discord
 from discord.ext import commands
 import rules
 from rules import rules
-import os
 
 # Bot Prefix
 client = commands.Bot(command_prefix='!')
@@ -42,5 +41,5 @@ async def ban(ctx, member : discord.Member,*, reason = 'No Reason Provided'):
     await member.ban(reason=reason)
 
 # Token
-os.environ['token'] = 'NzkyMTg0NTY0MDM0MzA2MDY4.X-aBXg.O7Tfv0e22jvtKRTXMDIqRUiH6Ko'
-client.run('token')
+import os
+client.run(os.getenv('TOKEN'))
