@@ -30,7 +30,7 @@ async def purge(ctx, amount):
 @client.command()
 @commands.has_permissions(kick_members = True)
 async def kick(ctx, member : discord.Member,*, reason = 'No Reason Provided'):
-    await member.send(f'You have been kicked from NFL Discord for {reason}.')
+    await ctx.send(f'{member} has been kicked from NFL Discord for {reason}.')
     await member.kick(reason=reason)
 
 # !ban <user>
