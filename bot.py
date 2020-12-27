@@ -53,6 +53,35 @@ async def unban(ctx, *, member):
             await ctx.send(f'{member_name} has been unbanned.')
             return
 
+# !mute <user>
+@client.command()
+@commands.has_permissions(kick_members=True)
+async def mute(ctx, member : discord.Member):
+    muted_role = ctx.guild.get_role(607034271990939658)
+    await member.add_roles(muted_role)
+    await ctx.send(f'**{member.mention}** has been muted.')
+
+# !unmute <user>
+@client.command()
+@commands.has_permissions(kick_members=True)
+async def unmute(ctx, member : discord.Member):
+    muted_role = ctx.guild.get_role(607034271990939658)
+    await member.remove_roles(muted_role)
+    await ctx.send(f'**{member.mention}** has been unmuted.')
+
+# !warn <user> <reason>
+@client.command()
+@commands.has_permissions(kick_members=True)
+async def warn(ctx, member : discord.Member, *, reason = 'No Reason Provided'):
+    await ctx.send(f'**{member}** has been warned for {reason}.')
+
+# !ping
+@client.command()
+async def ping(ctx):
+    latency = str(client.latency * 1000)
+    decimal = latency.split('.')
+    await ctx.send(f'🏓 **Pong!** `{decimal[0]}ms`')
+
 # !calc <number> <operator> <number>
 @client.command(aliases=['calculate'])
 async def calc(ctx, *, equation):
