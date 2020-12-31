@@ -87,19 +87,33 @@ async def ping(ctx):
 async def calc(ctx, *, equation):
     try:
         list = equation.split(' ')
-        if list[1] == '+':
-            await ctx.send(f'{list[0]} + {list[2]} = {int(list[0]) + int(list[2])}')
-        elif list[1] == '-':
-            await ctx.send(f'{list[0]} - {list[2]} = {int(list[0]) - int(list[2])}')
-        elif list[1].lower() == 'x' or list[1] == '*':
-            await ctx.send(f'{list[0]} x {list[2]} = {int(list[0]) * int(list[2])}')
-        elif list[1] == '/':
+        digits1 = 0
+        digits2 = 0
+        for x in list[0]:
+          if x != '.':
+            digits1 += 1
+          else:
+            continue
+        for x in list[2]:
+          if x != '.':
+            digits2 += 1
+          else:
+            continue
+        if digits1 <= 10 and digits2 <= 10:
+          if list[1] == '+':
+             await ctx.send(f'{list[0]} + {list[2]} = {int(list[0]) + int(list[2])}')
+          elif list[1] == '-':
+             await ctx.send(f'{list[0]} - {list[2]} = {int(list[0]) - int(list[2])}')
+          elif list[1].lower() == 'x' or list[1] == '*':
+             await ctx.send(f'{list[0]} x {list[2]} = {int(list[0]) * int(list[2])}')
+          elif list[1] == '/':
             await ctx.send(f'{list[0]} / {list[2]} = {int(list[0]) / int(list[2])}')
-        elif list[1] == '^':
-            await ctx.send(f'{list[0]} ^ {list[2]} = {int(list[0]) ** int(list[2])}')
+          elif list[1] == '^':
+              await ctx.send(f'{list[0]} ^ {list[2]} = {int(list[0]) ** int(list[2])}')
+          else:
+              await ctx.send(f'Could not understand; incorrect format. Include a space between number and operator. Please make sure to perform !calc like this: <number> <operator> <number>.\nEx:\n- !calc 4 x 5\n- !calc 3345 + 123\n- !calc 54 / 3')
         else:
-            await ctx.send(f'Could not understand; incorrect format. Include a space between number and operator. Please make sure to perform !calc like this: <number> <operator> <number>.\nEx:\n- !calc 4 x 5\n- !calc 3345 + 123\n- !calc 54 / 3')
-
+            await ctx.send(f'Numbers must only contain 10 or less digits.')
     except:
-        await ctx.send(f'Could not understand; incorrect format. Include a space between number and operator. Please make sure to perform !calc like this: <number> <operator> <number>.\nEx:\n- !calc 4 x 5\n- !calc 3345 + 123\n- !calc 54 / 3')
+          await ctx.send(f'Could not understand; incorrect format. Include a space between number and operator. Please make sure to perform !calc like this: <number> <operator> <number>.\nEx:\n- !calc 4 x 5\n- !calc 3345 + 123\n- !calc 54 / 3')
 
