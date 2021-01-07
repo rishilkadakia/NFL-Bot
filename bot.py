@@ -3,6 +3,17 @@ from discord.ext import commands
 import rules
 from rules import rules
 import asyncio
+import requests
+from bs4 import BeautifulSoup
+import concurrent.futures
+import random
+import replies
+from replies import replies
+
+def web_scrape(url):
+    page = requests.get(url)
+    soup = BeautifulSoup(page.content, 'html.parser')
+    return soup
 
 # Bot Prefix
 client = commands.Bot(command_prefix='!')
@@ -11,16 +22,42 @@ client = commands.Bot(command_prefix='!')
 @client.event
 async def on_ready():
     print('Bot is ready.')
+    await client.change_presence(status=discord.Status.online, activity=discord.Activity(type=discord.ActivityType.playing, name="Rishil_Emperor#0001"), )
+
+# On Error
+@client.event
+async def on_command_error(ctx, error):
+    if isinstance(error, commands.MissingPermissions):
+        await ctx.send('You do not have permission to perform this command.')
 
 # !hello
 @client.command()
 async def hello(ctx):
     await ctx.send('Hi!')
 
+@client.command()
+async def stats(ctx, searchterm):
+    url = f"https://www.nfl.com/players/active/all?query={searchterm}"
+    with concurrent.futures.ThreadPoolExecutor() as pool:
+        soup = await asyncio.get_event_loop().run_in_executor(pool, web_scrape, url)
+        print(soup)
+
 # !rule <number>
 @client.command()
 async def rule(ctx, *, number):
     await ctx.send(rules[int(number) - 1])
+
+# !coinflip
+@client.command(aliases = ['coinflip'])
+async def flip(ctx):
+    coin = ['Heads', 'Tails']
+    await ctx.send(f'It\'s {random.choice(coin)}!')
+
+# !8ball <statement>
+@client.command(aliases = ['8Ball', '8ball'])
+async def fortune(ctx, *, statement):
+    reply = random.choice(replies)
+    await ctx.send(reply)
 
 # !purge <amount>
 @client.command(aliases=['clear'])
@@ -127,3 +164,4 @@ async def calc(ctx, *, equation):
     except:
           await ctx.send(f'Could not understand; incorrect format. Include a space between number and operator. Please make sure to perform !calc like this: <number> <operator> <number>.\nEx:\n- !calc 4 x 5\n- !calc 3345 + 123\n- !calc 54 / 3')
 
+client.run('NzkyMTg0NTY0MDM0MzA2MDY4.X-aBXg.7VB61aqfIkcMGewAol1E8_GSoTM')
