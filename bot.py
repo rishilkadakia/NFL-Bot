@@ -51,13 +51,27 @@ async def rule(ctx, *, number):
 @client.command(aliases = ['coinflip'])
 async def flip(ctx):
     coin = ['Heads', 'Tails']
-    await ctx.send(f'It\'s {random.choice(coin)}!')
+    await ctx.send(f'It\'s **{random.choice(coin)}**!')
 
 # !8ball <statement>
 @client.command(aliases = ['8Ball', '8ball'])
 async def fortune(ctx, *, statement):
     reply = random.choice(replies)
     await ctx.send(reply)
+
+# !rps <choice>
+@client.command(aliases = ['rockpaperscissors', 'RPS'])
+async def rps(ctx, *, choice):
+    rps_choices = ['rock', 'paper', 'scissors']
+    rps_choice = random.choice(rps_choices)
+    if choice.lower() == rps_choice:
+        await ctx.send(f'I chose `{rps_choice}` and you chose `{choice.lower()}`. **Tie!**')
+    elif choice.lower() == 'rock' and rps_choice == 'scissors' or choice.lower() == 'scissors' and rps_choice == 'paper' or choice.lower() == 'paper' and rps_choice == 'rock':
+        await ctx.send(f'I chose `{rps_choice}` and you chose `{choice.lower()}`. **You Win!**')
+    elif choice.lower() == 'rock' and rps_choice == 'paper' or choice.lower() == 'paper' and rps_choice == 'scissors' or choice.lower() == 'scissors' and rps_choice == 'rock':
+        await ctx.send(f'I chose `{rps_choice}` and you chose `{choice.lower()}`. **I Win!**')
+    else:
+        await ctx.send(f'Something went wrong. Please make sure your choice is either `rock`, `paper`, or `scissors`.')
 
 # !purge <amount>
 @client.command(aliases=['clear'])
