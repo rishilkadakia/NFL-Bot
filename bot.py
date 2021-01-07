@@ -73,6 +73,19 @@ async def rps(ctx, *, choice):
     else:
         await ctx.send(f'Something went wrong. Please make sure your choice is either `rock`, `paper`, or `scissors`.')
 
+# !number <number 1> <number 2>
+@client.command(aliases = ['choosenumber'])
+async def number(ctx, num1, *, num2):
+    try:
+        num_1 = int(num1)
+        num_2 = int(num2)
+        if num_1 > num_2:
+            await ctx.send(f'Please make sure you are inputting two numbers. Make sure that the first number is less than the second number.')
+        else:
+            await ctx.send(f'Number: **{random.choice(range(num_1, num_2+1))}**')
+    except:
+        await ctx.send(f'Please make sure you are inputting two numbers. Make sure that the first number is less than the second number.')
+
 # !purge <amount>
 @client.command(aliases=['clear'])
 async def purge(ctx, amount):
