@@ -36,11 +36,30 @@ async def hello(ctx):
     await ctx.send('Hi!')
 
 @client.command()
-async def stats(ctx, searchterm):
+async def stats(ctx, *, searchterm):
     url = f"https://www.nfl.com/players/active/all?query={searchterm}"
     with concurrent.futures.ThreadPoolExecutor() as pool:
         soup = await asyncio.get_event_loop().run_in_executor(pool, web_scrape, url)
-        print(soup)
+    players = {}
+    for hyperlink in soup.find_all(href=True):
+        if hyperlink['href'].startswith("/players/") and hyperlink['href'] != "/players/":
+            if not hyperlink['href'].endswith('/all'):
+                alphabet = [char for char in 'abcdefghijklmnopqrstuvwxyz']
+                if not hyperlink.get_text().lower() in alphabet:
+                    players[hyperlink.get_text().strip()] = f"https://nfl.com{hyperlink['href']}"
+                    player_names = players.keys()
+                    player_links = players.values()
+    if len(players) == 0:
+        await ctx.send('No Matching Results.')
+        return
+    elif len(players) == 1:
+        player = players.values()[0]
+    else:
+        description = ""
+        description = '\n'.join(
+            [f"{i + 1}. [{player_names[i]}]({f'{player_links[i]}stats/'})" for i in
+                range(len(player_names)) if
+                i < 10 and sum([len(characters) for characters in description]) < 1900])
 
 # !rule <number>
 @client.command()
@@ -53,7 +72,7 @@ async def flip(ctx):
     coin = ['Heads', 'Tails']
     await ctx.send(f'It\'s **{random.choice(coin)}**!')
 
-# !8ball <statement>
+# !8ball <question>
 @client.command(aliases = ['8Ball', '8ball'])
 async def fortune(ctx, *, statement):
     reply = random.choice(replies)
@@ -73,9 +92,9 @@ async def rps(ctx, *, choice):
     else:
         await ctx.send(f'Something went wrong. Please make sure your choice is either `rock`, `paper`, or `scissors`.')
 
-# !number <number 1> <number 2>
-@client.command(aliases = ['choosenumber'])
-async def number(ctx, num1, *, num2):
+# !choosenumber <number 1> <number 2>
+@client.command(aliases = ['number'])
+async def choosenumber(ctx, num1, *, num2):
     try:
         num_1 = int(num1)
         num_2 = int(num2)
@@ -157,6 +176,16 @@ async def ping(ctx):
     latency = str(client.latency * 1000)
     decimal = latency.split('.')
     await ctx.send(f'🏓 **Pong!** `{decimal[0]}ms`')
+
+# !whois <user>
+colors = [discord.Colour.red(), discord.Colour.blue()]
+@client.command(aliases = ['user', 'info'])
+async def whois(ctx, member : discord.Member):
+    embed = discord.Embed(title = member.name, description = member.mention, color = random.choice(colors))
+    embed.add_field(name = 'ID', value = member.id , inline = True)
+    embed.set_thumbnail(url=member.avatar_url)
+    embed.set_footer(icon_url = ctx.author.avatar_url, text = f'Requested By: {ctx.author.name}')
+    await ctx.send(embed = embed)
 
 # !calc <number> <operator> <number>
 @client.command(aliases=['calculate'])
