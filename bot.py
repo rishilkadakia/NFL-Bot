@@ -35,31 +35,21 @@ async def on_command_error(ctx, error):
 async def hello(ctx):
     await ctx.send('Hi!')
 
+# !stats <status> <player>
 @client.command()
 async def stats(ctx, *, searchterm):
-    url = f"https://www.nfl.com/players/active/all?query={searchterm}"
+    player_name = searchterm.split(' ')
+    first_name = player_name[0]
+    last_name = player_name[1]
+    print(f'{first_name} {last_name}')
+    url = f'https://www.nfl.com/players/{first_name.lower()}-{last_name.lower()}/stats/'
     with concurrent.futures.ThreadPoolExecutor() as pool:
         soup = await asyncio.get_event_loop().run_in_executor(pool, web_scrape, url)
-    players = {}
-    for hyperlink in soup.find_all(href=True):
-        if hyperlink['href'].startswith("/players/") and hyperlink['href'] != "/players/":
-            if not hyperlink['href'].endswith('/all'):
-                alphabet = [char for char in 'abcdefghijklmnopqrstuvwxyz']
-                if not hyperlink.get_text().lower() in alphabet:
-                    players[hyperlink.get_text().strip()] = f"https://nfl.com{hyperlink['href']}"
-                    player_names = players.keys()
-                    player_links = players.values()
-    if len(players) == 0:
-        await ctx.send('No Matching Results.')
-        return
-    elif len(players) == 1:
-        player = players.values()[0]
-    else:
-        description = ""
-        description = '\n'.join(
-            [f"{i + 1}. [{player_names[i]}]({f'{player_links[i]}stats/'})" for i in
-                range(len(player_names)) if
-                i < 10 and sum([len(characters) for characters in description]) < 1900])
+    data = []
+    for a in soup.find_all(class_="d3-o-table--horizontal-scroll"):
+        data.append(a.get_text())
+        print(f'{first_name} {last_name}')
+        print(data)
 
 # !rule <number>
 @client.command()
@@ -70,13 +60,13 @@ async def rule(ctx, *, number):
 @client.command(aliases = ['coinflip'])
 async def flip(ctx):
     coin = ['Heads', 'Tails']
-    await ctx.send(f'It\'s **{random.choice(coin)}**!')
+    await ctx.send(f':coin: | It\'s **{random.choice(coin)}**!')
 
 # !8ball <question>
 @client.command(aliases = ['8Ball', '8ball'])
 async def fortune(ctx, *, statement):
     reply = random.choice(replies)
-    await ctx.send(reply)
+    await ctx.send(f'🎱 | {reply}')
 
 # !rps <choice>
 @client.command(aliases = ['rockpaperscissors', 'RPS'])
@@ -175,12 +165,14 @@ async def warn(ctx, member : discord.Member, *, reason = 'No Reason Provided'):
 async def ping(ctx):
     latency = str(client.latency * 1000)
     decimal = latency.split('.')
-    await ctx.send(f'🏓 **Pong!** `{decimal[0]}ms`')
+    await ctx.send(f'🏓 | **Pong!** `{decimal[0]}ms`')
 
 # !whois <user>
 colors = [discord.Colour.red(), discord.Colour.blue()]
 @client.command(aliases = ['user', 'info'])
-async def whois(ctx, member : discord.Member):
+async def whois(ctx, member : discord.Member = None):
+    if member is None:
+        member = ctx.author
     embed = discord.Embed(title = member.name, description = member.mention, color = random.choice(colors))
     embed.add_field(name = 'ID', value = member.id , inline = True)
     embed.set_thumbnail(url=member.avatar_url)
