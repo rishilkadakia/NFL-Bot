@@ -96,7 +96,7 @@ async def choosenumber(ctx, num1, *, num2):
         else:
             await ctx.send(f'Number: **{random.choice(range(num_1, num_2+1))}**')
     except:
-        await ctx.send(f'Please make sure you are inputting two numbers. Make sure that the first number is less than the second number.')
+        await ctx.send(f'Please make sure you are inputting two numbers, and make sure that the first number is less than the second number.')
 
 # !purge <amount>
 @client.command(aliases=['clear'])
