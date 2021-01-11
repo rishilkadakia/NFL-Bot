@@ -35,20 +35,18 @@ async def on_command_error(ctx, error):
 async def hello(ctx):
     await ctx.send('Hi!')
 
-# !stats <status> <player>
+# !stats <player>
 @client.command()
 async def stats(ctx, *, searchterm):
     player_name = searchterm.split(' ')
     first_name = player_name[0]
     last_name = player_name[1]
-    print(f'{first_name} {last_name}')
     url = f'https://www.nfl.com/players/{first_name.lower()}-{last_name.lower()}/stats/'
     with concurrent.futures.ThreadPoolExecutor() as pool:
         soup = await asyncio.get_event_loop().run_in_executor(pool, web_scrape, url)
     data = []
     for a in soup.find_all(class_="d3-o-table--horizontal-scroll"):
         data.append(a.get_text())
-        print(f'{first_name} {last_name}')
         print(data)
 
 # !rule <number>
@@ -212,4 +210,4 @@ async def calc(ctx, *, equation):
     except:
           await ctx.send(f'Could not understand; incorrect format. Include a space between number and operator. Please make sure to perform !calc like this: <number> <operator> <number>.\nEx:\n- !calc 4 x 5\n- !calc 3345 + 123\n- !calc 54 / 3')
 
-
+client.run('NzkyMTg0NTY0MDM0MzA2MDY4.X-aBXg.djQ5cRA311vL9-apowphV8p7hVQ')
