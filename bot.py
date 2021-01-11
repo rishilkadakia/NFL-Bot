@@ -31,12 +31,12 @@ async def on_command_error(ctx, error):
         await ctx.send('You do not have permission to perform this command.')
 
 # !hello
-@client.command(aliases=['hi'])
+@client.command(aliases = ['hi'])
 async def hello(ctx):
     await ctx.send('Hi!')
-
+    
 # !bye
-@client.command(aliases=['goodbye'])
+@client.command(aliases = ['goodbye'])
 async def bye(ctx):
     await ctx.send('Bye!')
 
