@@ -31,9 +31,14 @@ async def on_command_error(ctx, error):
         await ctx.send('You do not have permission to perform this command.')
 
 # !hello
-@client.command()
+@client.command(aliases=['hi'])
 async def hello(ctx):
     await ctx.send('Hi!')
+
+# !bye
+@client.command(aliases=['goodbye'])
+async def bye(ctx):
+    await ctx.send('Bye!')
 
 # !stats <player>
 @client.command()
@@ -125,22 +130,24 @@ async def unban(ctx, *, member):
             await ctx.send(f'{member_name} has been unbanned.')
             return
 
-# !mute <user>
+# !mute <user> <time> <unit>
 @client.command()
 @commands.has_permissions(kick_members=True)
 async def mute(ctx, member : discord.Member, duration=0,*, unit = None):
+    if not unit or unit.lower() not in ['s', 'm', 'h', 'd']:
+        return await ctx.send('Give a correct unit: `s = seconds | m = minutes | h = hours | d = days`.')
     muted_role = ctx.guild.get_role(607034271990939658)
     await ctx.send(f'**{member.mention}** has been muted for *{duration}{unit}*.')
     await member.add_roles(muted_role)
     if unit.lower() == 's':
         wait = 1 * duration
-        await asyncio.sleep(wait)
-    elif unit.lower() == 'm':
+    if unit.lower() == 'm':
         wait = 60 * duration
-        await asyncio.sleep(wait)
-    elif unit.lower() == 'h':
+    if unit.lower() == 'h':
         wait = 3600 * duration
-        await asyncio.sleep(wait)
+    if unit.lower() == 'd':
+        wait = 86400 * duration
+    await asyncio.sleep(wait)
     await member.remove_roles(muted_role)
     await ctx.send(f'**{member.mention}** has been unmuted.')
 
@@ -210,3 +217,4 @@ async def calc(ctx, *, equation):
     except:
           await ctx.send(f'Could not understand; incorrect format. Include a space between number and operator. Please make sure to perform !calc like this: <number> <operator> <number>.\nEx:\n- !calc 4 x 5\n- !calc 3345 + 123\n- !calc 54 / 3')
 
+client.run('NzkyMTg0NTY0MDM0MzA2MDY4.X-aBXg.CF8OHklFdCDoOj7ucX1iUPEC7g4')
