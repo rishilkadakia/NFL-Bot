@@ -85,6 +85,13 @@ async def rps(ctx, *, choice):
     else:
         await ctx.send(f'Something went wrong. Please make sure your choice is either `rock`, `paper`, or `scissors`.')
 
+# !choice <choices>
+@client.command(aliases = ['multiplechoice'])
+async def choice(ctx, *, items):
+    choices = items.split(',')
+    choice = random.choice(choices)
+    await ctx.send(f'I chose: **{choice}**.')
+
 # !choosenumber <number 1> <number 2>
 @client.command(aliases = ['number'])
 async def choosenumber(ctx, num1, *, num2):
