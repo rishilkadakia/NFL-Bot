@@ -43,9 +43,29 @@ async def hello(ctx):
 async def bye(ctx):
     await ctx.send('Bye!')
 
+# !whois <user>
+@client.command(aliases = ['user'])
+async def whois(ctx, member : discord.Member = None):
+    if member is None:
+        member = ctx.author
+    embed = discord.Embed(title = member.name, description = member.mention, color = discord.Colour.dark_blue())
+    embed.add_field(name = 'ID', value = member.id , inline = True)
+    embed.set_thumbnail(url=member.avatar_url)
+    embed.set_footer(icon_url = ctx.author.avatar_url, text = f'Requested By: {ctx.author.name}')
+    await ctx.send(embed = embed)
+
+# !info
+@client.command()
+async def info(ctx):
+    embed = discord.Embed(title = 'About NFL Bot:',
+                          description = '- NFL Bot is a discord bot for NFL Discord, created by Rishil_Emperor#0001. \n- NFL Bot web-scrapes from [NFL\'s Website](https://https://www.nfl.com/) to collect stats and information.\n- NFL Bot is programmed and coded in Python with the [discord.py](https://github.com/Rapptz/discord.py) API wrapper.\n\n[Invite Link](https://discord.com/api/oauth2/authorize?client_id=792184564034306068&permissions=8&scope=bot) • [Official Discord Server](https://discord.gg/pSgu26fg9R) • [GitHub](https://github.com/Rishil-Emperor/NFL-Bot)\n\nSpecial Thanks to QuaKe#5943',
+                          color = discord.Colour.dark_blue())
+    embed.set_thumbnail(url = "https://cdn.discordapp.com/attachments/783221368221073410/799377802797121566/NFL1.png")
+    await ctx.send(embed=embed)
+
 # !stats <player>
 @client.command()
-async def stats(ctx, year, * , searchterm):
+async def stats(ctx, year, *, searchterm):
     player_name = searchterm.split(' ')
     first_name = player_name[0]
     last_name = player_name[1]
@@ -73,8 +93,10 @@ async def stats(ctx, year, * , searchterm):
         stats_minus_categories = final_stats[start_of_stats:]
         print(stats_minus_categories)
         for position, x in enumerate(stats_minus_categories):
-            if x in nfl_years and stats_minus_categories[position-2] == year:
+            if x in nfl_teams and stats_minus_categories[position-2] == year:
                 new_stats = stats_minus_categories[position-2:]
+                print(new_stats)
+                continue
             else:
                 pass
         break
@@ -206,18 +228,6 @@ async def ping(ctx):
     latency = str(client.latency * 1000)
     decimal = latency.split('.')
     await ctx.send(f'🏓 | **Pong!** `{decimal[0]}ms`')
-
-# !whois <user>
-colors = [discord.Colour.red(), discord.Colour.blue()]
-@client.command(aliases = ['user', 'info'])
-async def whois(ctx, member : discord.Member = None):
-    if member is None:
-        member = ctx.author
-    embed = discord.Embed(title = member.name, description = member.mention, color = random.choice(colors))
-    embed.add_field(name = 'ID', value = member.id , inline = True)
-    embed.set_thumbnail(url=member.avatar_url)
-    embed.set_footer(icon_url = ctx.author.avatar_url, text = f'Requested By: {ctx.author.name}')
-    await ctx.send(embed = embed)
 
 # !calc <number> <operator> <number>
 @client.command(aliases=['calculate'])
