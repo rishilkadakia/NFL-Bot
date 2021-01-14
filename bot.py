@@ -9,6 +9,9 @@ import concurrent.futures
 import random
 import replies
 from replies import replies
+import re
+import nfl_teams
+from nfl_teams import nfl_teams
 
 def web_scrape(url):
     page = requests.get(url)
@@ -42,7 +45,7 @@ async def bye(ctx):
 
 # !stats <player>
 @client.command()
-async def stats(ctx, *, searchterm):
+async def stats(ctx, year, * , searchterm):
     player_name = searchterm.split(' ')
     first_name = player_name[0]
     last_name = player_name[1]
@@ -50,9 +53,31 @@ async def stats(ctx, *, searchterm):
     with concurrent.futures.ThreadPoolExecutor() as pool:
         soup = await asyncio.get_event_loop().run_in_executor(pool, web_scrape, url)
     data = []
+    print(len(soup.find_all(class_="d3-o-table--horizontal-scroll")))
     for a in soup.find_all(class_="d3-o-table--horizontal-scroll"):
         data.append(a.get_text())
-        print(data)
+        player_stats = data[0]
+        new_player_stats = re.sub("[\\n]{2,}", "\\n", player_stats)
+        no_line_break_player_stats = new_player_stats.split('\n')[1:]
+        categories = []
+        final_stats = [x.strip() for x in no_line_break_player_stats]
+        print(final_stats)
+        nfl_years = [str(x) for x in range(1900, 2100)]
+        for position, x in enumerate(final_stats):
+            if x in nfl_years:
+                start_of_stats = position
+                break
+            else:
+                categories.append(x)
+        print(categories)
+        stats_minus_categories = final_stats[start_of_stats:]
+        print(stats_minus_categories)
+        for position, x in enumerate(stats_minus_categories):
+            if x in nfl_years and stats_minus_categories[position-2] == year:
+                new_stats = stats_minus_categories[position-2:]
+            else:
+                pass
+        break
 
 # !rule <number>
 @client.command()
@@ -90,7 +115,7 @@ async def rps(ctx, *, choice):
 async def choice(ctx, *, items):
     choices = items.split(',')
     choice = random.choice(choices)
-    await ctx.send(f'I chose: **{choice}**.')
+    await ctx.send(f'🤔 | I chose: **{choice}**.')
 
 # !choosenumber <number 1> <number 2>
 @client.command(aliases = ['number'])
@@ -170,7 +195,10 @@ async def unmute(ctx, member : discord.Member):
 @client.command()
 @commands.has_permissions(kick_members=True)
 async def warn(ctx, member : discord.Member, *, reason = 'No Reason Provided'):
-    await ctx.send(f'**{member}** has been warned for {reason}.')
+    if reason[-1] == '.':
+        await ctx.send(f'**{member}** has been warned for *{reason}*')
+    else:
+        await ctx.send(f'**{member}** has been warned for {reason}.')
 
 # !ping
 @client.command()
