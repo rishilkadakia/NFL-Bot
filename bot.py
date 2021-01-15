@@ -13,13 +13,19 @@ import re
 import nfl_teams
 from nfl_teams import nfl_teams
 
+# Extra Functions
 def web_scrape(url):
     page = requests.get(url)
     soup = BeautifulSoup(page.content, 'html.parser')
     return soup
+def capitalize(str):
+    first_letter = str[0].upper()
+    capitalized_str = f'{first_letter}{str[1:]}'
+    return capitalized_str
 
 # Bot Prefix
 client = commands.Bot(command_prefix='!')
+client.remove_command('help')
 
 # On Run
 @client.event
@@ -43,6 +49,15 @@ async def hello(ctx):
 async def bye(ctx):
     await ctx.send('Bye!')
 
+# !help <command>
+@client.command()
+async def help(ctx, *, command = None):
+    if command is None:
+        embed = discord.Embed(
+            title = 'Commands:',
+            description = 'Use `!help [command]` to get more info on a specific command.\n\n**NFL Commands:**\n`!stats <year> <player>`\n\n'
+        )
+
 # !whois <user>
 @client.command(aliases = ['user'])
 async def whois(ctx, member : discord.Member = None):
@@ -54,18 +69,20 @@ async def whois(ctx, member : discord.Member = None):
     embed.set_footer(icon_url = ctx.author.avatar_url, text = f'Requested By: {ctx.author.name}')
     await ctx.send(embed = embed)
 
-# !info
+# !botinfo
 @client.command()
-async def info(ctx):
+async def botinfo(ctx):
     embed = discord.Embed(title = 'About NFL Bot:',
-                          description = '- NFL Bot is a discord bot for NFL Discord, created by Rishil_Emperor#0001. \n- NFL Bot web-scrapes from [NFL\'s Website](https://https://www.nfl.com/) to collect stats and information.\n- NFL Bot is programmed and coded in Python with the [discord.py](https://github.com/Rapptz/discord.py) API wrapper.\n\n[Invite Link](https://discord.com/api/oauth2/authorize?client_id=792184564034306068&permissions=8&scope=bot) • [Official Discord Server](https://discord.gg/pSgu26fg9R) • [GitHub](https://github.com/Rishil-Emperor/NFL-Bot)\n\nSpecial Thanks to QuaKe#5943',
+                          description = '- NFL Bot is a discord bot for NFL Discord, created by Rishil_Emperor#0001. \n- NFL Bot web-scrapes from [NFL\'s Website](https://https://www.nfl.com/) to collect stats and information.\n- NFL Bot is programmed and coded in Python with the [discord.py](https://github.com/Rapptz/discord.py) API wrapper.\n\n[Bot Invite Link](https://discord.com/api/oauth2/authorize?client_id=792184564034306068&permissions=8&scope=bot) • [Official Discord Server](https://discord.gg/pSgu26fg9R) • [GitHub Page](https://github.com/Rishil-Emperor/NFL-Bot)\n\nCreated by Rishil_Emperor#0001 | Special Thanks to QuaKe#5943',
                           color = discord.Colour.dark_blue())
-    embed.set_thumbnail(url = "https://cdn.discordapp.com/attachments/783221368221073410/799377802797121566/NFL1.png")
+    embed.set_thumbnail(url = client.user.avatar_url)
     await ctx.send(embed=embed)
 
 # !stats <player>
 @client.command()
 async def stats(ctx, year, *, searchterm):
+    first_embed = discord.Embed(title = 'Loading...', colour = discord.Colour.dark_blue())
+    msg = await ctx.send(embed = first_embed)
     player_name = searchterm.split(' ')
     first_name = player_name[0]
     last_name = player_name[1]
@@ -73,7 +90,6 @@ async def stats(ctx, year, *, searchterm):
     with concurrent.futures.ThreadPoolExecutor() as pool:
         soup = await asyncio.get_event_loop().run_in_executor(pool, web_scrape, url)
     data = []
-    print(len(soup.find_all(class_="d3-o-table--horizontal-scroll")))
     for a in soup.find_all(class_="d3-o-table--horizontal-scroll"):
         data.append(a.get_text())
         player_stats = data[0]
@@ -96,10 +112,25 @@ async def stats(ctx, year, *, searchterm):
             if x in nfl_teams and stats_minus_categories[position-2] == year:
                 new_stats = stats_minus_categories[position-2:]
                 print(new_stats)
+                for position, x in enumerate(new_stats):
+                    if x != new_stats[0] and x in nfl_years:
+                        year_stats = new_stats[:position]
+                        break
                 continue
             else:
                 pass
+        year_stats_no_spaces = [x for x in year_stats if x != '']
+        print(year_stats_no_spaces)
         break
+    stats = dict(zip(categories, year_stats_no_spaces))
+    print(stats)
+    final_embed = discord.Embed(
+        title = f'{capitalize(first_name)} {capitalize(last_name)}:',
+        description = '\n'.join(f'**{k}**: {v}' for k, v in stats.items()),
+        colour = discord.Colour.dark_blue()
+    )
+    final_embed.set_footer(text = f'Powered by NFL.com | Coded by Rishil_Emperor#0001')
+    await msg.edit(embed=final_embed)
 
 # !rule <number>
 @client.command()
@@ -155,7 +186,7 @@ async def choosenumber(ctx, num1, *, num2):
 # !purge <amount>
 @client.command(aliases=['clear'])
 async def purge(ctx, amount):
-    await ctx.channel.purge(limit=int(amount) + 1)
+        await ctx.channel.purge(limit=int(amount) + 1)
 
 # !kick <user>
 @client.command()
@@ -225,9 +256,9 @@ async def warn(ctx, member : discord.Member, *, reason = 'No Reason Provided'):
 # !ping
 @client.command()
 async def ping(ctx):
-    latency = str(client.latency * 1000)
-    decimal = latency.split('.')
-    await ctx.send(f'🏓 | **Pong!** `{decimal[0]}ms`')
+    msg = await ctx.send(f'Loading...')
+    await asyncio.sleep(0.1)
+    await msg.edit(content=f'🏓 | **Pong!** `{round(client.latency * 1000)}ms`')
 
 # !calc <number> <operator> <number>
 @client.command(aliases=['calculate'])
