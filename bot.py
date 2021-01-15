@@ -113,9 +113,12 @@ async def stats(ctx, year, *, searchterm):
                 new_stats = stats_minus_categories[position-2:]
                 print(new_stats)
                 for position, x in enumerate(new_stats):
-                    if x != new_stats[0] and x in nfl_years:
-                        year_stats = new_stats[:position]
-                        break
+                    if x != '2020':
+                        if x != new_stats[0] and x in nfl_years:
+                            year_stats = new_stats[:position]
+                            break
+                    else:
+                        year_stats = new_stats
                 continue
             else:
                 pass
