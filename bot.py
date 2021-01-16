@@ -38,6 +38,8 @@ async def on_ready():
 async def on_command_error(ctx, error):
     if isinstance(error, commands.MissingPermissions):
         await ctx.send('You do not have permission to perform this command.')
+    if isinstance(error, commands.CommandOnCooldown):
+        await ctx.send(f'You are on cooldown for {str(error.retry_after)[:3]} seconds!')
 
 # !hello
 @client.command(aliases = ['hi'])
@@ -78,8 +80,47 @@ async def botinfo(ctx):
     embed.set_thumbnail(url = client.user.avatar_url)
     await ctx.send(embed=embed)
 
-# !stats <player>
+# !info <player>
 @client.command()
+@commands.cooldown(1, 5, type=commands.BucketType.user)
+async def info(ctx, *, searchterm):
+    first_embed = discord.Embed(title = 'Loading...', color = discord.Colour.dark_blue())
+    msg = await ctx.send(embed = first_embed)
+    player_name = searchterm.split(' ')
+    first_name = player_name[0]
+    last_name = player_name[1]
+    url = f'https://www.nfl.com/players/{first_name}-{last_name}/'
+    with concurrent.futures.ThreadPoolExecutor() as pool:
+        soup = await asyncio.get_event_loop().run_in_executor(pool, web_scrape, url)
+    data = []
+    data2 = []
+    for a in soup.find_all(class_="nfl-c-player-header__title"):
+        data.append(a.get_text())
+        player_name = data[0]
+    for b in soup.find_all(class_="nfl-c-player-header__position"):
+        data.append(b.get_text())
+        split_position = data[1].split('\n')
+        player_position = split_position[1].strip(' ')
+    for c in soup.find_all(class_="d3-o-list__item"):
+        data.append(c.get_text())
+        new_data = [x for x in data if 'Height' in x or 'Weight' in x]
+    height_strip = new_data[0].strip('\n')
+    height = height_strip.split('\n')
+    weight_strip = new_data[1].strip('\n')
+    weight = weight_strip.split('\n')
+    print(height)
+    print(weight)
+    final_embed = discord.Embed(
+        title = player_name,
+        description = f'Position: {player_position}\n{height[0]}: {height[1]}\n{weight[0]}: {weight[1]}',
+        color = discord.Colour.dark_blue()
+    )
+    final_embed.set_footer(text = f'Powered by NFL.com | Coded by Rishil_Emperor#0001')
+    await msg.edit(embed = final_embed)
+
+# !stats <year> <player>
+@client.command()
+@commands.cooldown(1, 5, type=commands.BucketType.user)
 async def stats(ctx, year, *, searchterm):
     first_embed = discord.Embed(title = 'Loading...', colour = discord.Colour.dark_blue())
     msg = await ctx.send(embed = first_embed)
@@ -97,21 +138,22 @@ async def stats(ctx, year, *, searchterm):
         no_line_break_player_stats = new_player_stats.split('\n')[1:]
         categories = []
         final_stats = [x.strip() for x in no_line_break_player_stats]
-        print(final_stats)
         nfl_years = [str(x) for x in range(1900, 2100)]
+        start_of_stats = None
         for position, x in enumerate(final_stats):
             if x in nfl_years:
                 start_of_stats = position
                 break
             else:
                 categories.append(x)
-        print(categories)
+        if start_of_stats is None:
+            error_embed = discord.Embed(title = f'No data was found.', colour = discord.Colour.dark_blue())
+            await msg.edit(embed = error_embed)
+            return
         stats_minus_categories = final_stats[start_of_stats:]
-        print(stats_minus_categories)
         for position, x in enumerate(stats_minus_categories):
             if x in nfl_teams and stats_minus_categories[position-2] == year:
                 new_stats = stats_minus_categories[position-2:]
-                print(new_stats)
                 for position, x in enumerate(new_stats):
                     if x != '2020':
                         if x != new_stats[0] and x in nfl_years:
@@ -123,7 +165,6 @@ async def stats(ctx, year, *, searchterm):
             else:
                 pass
         year_stats_no_spaces = [x for x in year_stats if x != '']
-        print(year_stats_no_spaces)
         break
     stats = dict(zip(categories, year_stats_no_spaces))
     print(stats)
