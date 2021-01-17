@@ -19,6 +19,7 @@ def web_scrape(url):
     soup = BeautifulSoup(page.content, 'html.parser')
     return soup
 def capitalize(str):
+    str = str.lower()
     first_letter = str[0].upper()
     capitalized_str = f'{first_letter}{str[1:]}'
     return capitalized_str
@@ -57,7 +58,8 @@ async def help(ctx, *, command = None):
     if command is None:
         embed = discord.Embed(
             title = 'Commands:',
-            description = 'Use `!help [command]` to get more info on a specific command.\n\n**NFL Commands:**\n`!stats <year> <player>`\n\n'
+            description = 'Use `!help [command]` to get more info on a specific command.\n\n**NFL Commands:**\n`!stats <year> <player>`\n\n',
+            color = discord.Color.dark_blue()
         )
 
 # !whois <user>
@@ -65,7 +67,7 @@ async def help(ctx, *, command = None):
 async def whois(ctx, member : discord.Member = None):
     if member is None:
         member = ctx.author
-    embed = discord.Embed(title = member.name, description = member.mention, color = discord.Colour.dark_blue())
+    embed = discord.Embed(title = member.name, description = member.mention, color = discord.Color.dark_blue())
     embed.add_field(name = 'ID', value = member.id , inline = True)
     embed.set_thumbnail(url=member.avatar_url)
     embed.set_footer(icon_url = ctx.author.avatar_url, text = f'Requested By: {ctx.author.name}')
@@ -76,19 +78,33 @@ async def whois(ctx, member : discord.Member = None):
 async def botinfo(ctx):
     embed = discord.Embed(title = 'About NFL Bot:',
                           description = '- NFL Bot is a discord bot for NFL Discord, created by Rishil_Emperor#0001. \n- NFL Bot web-scrapes from [NFL\'s Website](https://https://www.nfl.com/) to collect stats and information.\n- NFL Bot is programmed and coded in Python with the [discord.py](https://github.com/Rapptz/discord.py) API wrapper.\n\n[Bot Invite Link](https://discord.com/api/oauth2/authorize?client_id=792184564034306068&permissions=8&scope=bot) • [Official Discord Server](https://discord.gg/pSgu26fg9R) • [GitHub Page](https://github.com/Rishil-Emperor/NFL-Bot)\n\nCreated by Rishil_Emperor#0001 | Special Thanks to QuaKe#5943',
-                          color = discord.Colour.dark_blue())
+                          color = discord.Color.dark_blue())
     embed.set_thumbnail(url = client.user.avatar_url)
     await ctx.send(embed=embed)
+
+# !schedule
+@client.command()
+async def schedule(ctx):
+    url = f'https://www.nfl.com/schedules/'
+    with concurrent.futures.ThreadPoolExecutor() as pool:
+        soup = await asyncio.get_event_loop().run_in_executor(pool, web_scrape, url)
+    data = []
+    for a in soup.find_all(class_ = 'd3-l-grid--outer d3-l-section-row nfl-o-matchup-group cc_cursor'):
+        data.append(a.get_text)
+        print(data)
 
 # !info <player>
 @client.command()
 @commands.cooldown(1, 5, type=commands.BucketType.user)
 async def info(ctx, *, searchterm):
-    first_embed = discord.Embed(title = 'Loading...', color = discord.Colour.dark_blue())
+    first_embed = discord.Embed(title = 'Loading...', color = discord.Color.dark_blue())
     msg = await ctx.send(embed = first_embed)
     player_name = searchterm.split(' ')
     first_name = player_name[0]
     last_name = player_name[1]
+    if searchterm.lower() == 'michael vick':
+        first_name = 'Mike'
+        last_name = 'Vick'
     url = f'https://www.nfl.com/players/{first_name}-{last_name}/'
     with concurrent.futures.ThreadPoolExecutor() as pool:
         soup = await asyncio.get_event_loop().run_in_executor(pool, web_scrape, url)
@@ -113,7 +129,7 @@ async def info(ctx, *, searchterm):
     final_embed = discord.Embed(
         title = player_name,
         description = f'Position: {player_position}\n{height[0]}: {height[1]}\n{weight[0]}: {weight[1]}',
-        color = discord.Colour.dark_blue()
+        color = discord.Color.dark_blue()
     )
     final_embed.set_footer(text = f'Powered by NFL.com | Coded by Rishil_Emperor#0001')
     await msg.edit(embed = final_embed)
@@ -122,11 +138,14 @@ async def info(ctx, *, searchterm):
 @client.command()
 @commands.cooldown(1, 5, type=commands.BucketType.user)
 async def stats(ctx, year, *, searchterm):
-    first_embed = discord.Embed(title = 'Loading...', colour = discord.Colour.dark_blue())
+    first_embed = discord.Embed(title = 'Loading...', color = discord.Color.dark_blue())
     msg = await ctx.send(embed = first_embed)
     player_name = searchterm.split(' ')
     first_name = player_name[0]
     last_name = player_name[1]
+    if searchterm.lower() == 'michael vick':
+        first_name = 'Mike'
+        last_name = 'Vick'
     url = f'https://www.nfl.com/players/{first_name.lower()}-{last_name.lower()}/stats/'
     with concurrent.futures.ThreadPoolExecutor() as pool:
         soup = await asyncio.get_event_loop().run_in_executor(pool, web_scrape, url)
@@ -147,7 +166,7 @@ async def stats(ctx, year, *, searchterm):
             else:
                 categories.append(x)
         if start_of_stats is None:
-            error_embed = discord.Embed(title = f'No data was found.', colour = discord.Colour.dark_blue())
+            error_embed = discord.Embed(title = f'No data was found.', color = discord.Color.dark_blue())
             await msg.edit(embed = error_embed)
             return
         stats_minus_categories = final_stats[start_of_stats:]
@@ -166,12 +185,16 @@ async def stats(ctx, year, *, searchterm):
                 pass
         year_stats_no_spaces = [x for x in year_stats if x != '']
         break
+    categories[categories.index('YEAR')] = 'Year'
+    categories[categories.index('TEAM')] = 'Team'
+    categories[categories.index('G')] = 'Games'
+    print(categories)
     stats = dict(zip(categories, year_stats_no_spaces))
     print(stats)
     final_embed = discord.Embed(
         title = f'{capitalize(first_name)} {capitalize(last_name)}:',
         description = '\n'.join(f'**{k}**: {v}' for k, v in stats.items()),
-        colour = discord.Colour.dark_blue()
+        color = discord.Color.dark_blue()
     )
     final_embed.set_footer(text = f'Powered by NFL.com | Coded by Rishil_Emperor#0001')
     await msg.edit(embed=final_embed)
