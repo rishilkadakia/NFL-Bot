@@ -58,7 +58,7 @@ async def help(ctx, *, command = None):
     if command is None:
         embed = discord.Embed(
             title = 'Commands:',
-            description = 'Use `!help [command]` to get more info on a specific command.\n\n**NFL Commands:**\n`!stats <year> <player>`\n\n',
+            description = 'Use `!help [command]` to get more info on a specific command.\n\n**NFL Commands:**\n`!stats` `!info`\n\n',
             color = discord.Color.dark_blue()
         )
 
@@ -85,13 +85,22 @@ async def botinfo(ctx):
 # !schedule
 @client.command()
 async def schedule(ctx):
-    url = f'https://www.nfl.com/schedules/'
-    with concurrent.futures.ThreadPoolExecutor() as pool:
-        soup = await asyncio.get_event_loop().run_in_executor(pool, web_scrape, url)
-    data = []
-    for a in soup.find_all(class_ = 'd3-l-grid--outer d3-l-section-row nfl-o-matchup-group cc_cursor'):
-        data.append(a.get_text)
-        print(data)
+    embed = discord.Embed(
+        title = 'Schedule:',
+        description = '- Browns (11-5) at Chiefs (14-2) [Divisional Round]\n- Buccaneers (11-5) at Saints (12-4) [Divisional Round]',
+        color = discord.Color.dark_blue()
+    )
+    await ctx.send(embed = embed)
+
+# !scores
+@client.command()
+async def scores(ctx):
+    embed = discord.Embed(
+        title = 'Scores:',
+        description = '- Rams [18] at **Packers [32]** (Divisional Round)\n- Ravens [3] at **Bills [17]** (Divisional Round)',
+        color = discord.Color.dark_blue()
+    )
+    await ctx.send(embed = embed)
 
 # !info <player>
 @client.command()
